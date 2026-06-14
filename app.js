@@ -108,6 +108,7 @@ d3.csv('Sales_BY_Category.csv').then(async function(data) {
       if (titleResult.status === 'fulfilled') {
         titleEl.textContent = titleResult.value.trim();
       } else {
+        console.error('Title generation failed:', titleResult.reason);
         titleEl.textContent = 'Analisis Performa Penjualan & Margin AdventureWorks';
       }
       titleEl.classList.add('loaded');
@@ -120,6 +121,7 @@ d3.csv('Sales_BY_Category.csv').then(async function(data) {
       fillZone('conflict-text',   scr.conflict);
       fillZone('resolution-text', scr.resolution);
     } else {
+      console.error('Story generation failed:', storyResult.reason);
       fillZone('setup-text', 'AdventureWorks Sales beroperasi di wilayah global dengan portofolio produk bervariasi (Bikes, Clothing, Accessories, Components). Kinerja operasional didukung oleh volume transaksi solid.');
       fillZone('conflict-text', 'Beberapa sub-kategori produk mengalami anomali margin profit yang signifikan, memicu kerugian di beberapa territory pemasaran.');
       fillZone('resolution-text', 'Diperlukan review kebijakan harga transfer dan kontrol inventory pada item dengan margin negatif guna menstabilkan profitabilitas.');
@@ -131,12 +133,14 @@ d3.csv('Sales_BY_Category.csv').then(async function(data) {
       if (insightResult.status === 'fulfilled') {
         insightEl.innerHTML = formatInsight(insightResult.value);
       } else {
+        console.error('Insight generation failed:', insightResult.reason);
+        const errMsg = insightResult.reason ? (insightResult.reason.message || insightResult.reason) : 'Unknown error';
         insightEl.innerHTML = `
           <div class="insight-line"><b>1. Tinjau Ulang Sub-Kategori Margin Negatif</b>: Lakukan penyesuaian harga jual atau kurangi biaya produksi untuk item-item yang merugikan.</div>
           <div class="insight-line"><b>2. Optimalisasi Stok Territory Kritis</b>: Fokuskan distribusi inventory pada wilayah dengan profitabilitas tinggi untuk memaksimalkan ROI.</div>
           <div class="insight-line"><b>3. Efisiensi Biaya Distribusi</b>: Evaluasi skema logistik dan kargo di territory guna meminimalisir overhead cost.</div>
           <div style="font-size: 10px; color: var(--text-subtle); margin-top: 12px; border-top: 1px dashed var(--border); padding-top: 8px; line-height: 1.5;">
-            ⚠️ <i>Koneksi ke Ollama Local gagal. Menggunakan analisis cadangan (fallback). Pastikan model <code>gemma3:latest</code> sudah terinstal.</i>
+            ⚠️ <i>Koneksi ke Ollama Local gagal (${errMsg}). Menggunakan analisis cadangan (fallback). Pastikan model <code>gemma3:latest</code> sudah terinstal.</i>
           </div>
         `;
       }
