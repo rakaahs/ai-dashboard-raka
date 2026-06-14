@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Dashboard Capstone — AdventureWorks Sales</title>
+  
+  <!-- Premium Fonts from Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+</head>
+<body>
+
+  <!-- TAB BAR — Sticky Navbar -->
+  <nav class="tab-bar">
+    <div class="tab-bar-brand">AdventureWorks Sales</div>
+    <div class="tab-buttons">
+      <button class="tab-btn active" id="tab-ai" onclick="switchTab('ai')">
+        AI Dashboard
+        <span class="tab-badge">D3 + LLM</span>
+      </button>
+      <button class="tab-btn tab-tableau" id="tab-tableau" onclick="switchTab('tableau')">
+        Tableau Report
+        <span class="tab-badge">Tableau Public</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- PANEL TABLEAU -->
+  <div id="panel-tableau">
+    <div class="tableau-wrap">
+      <div class="tableau-header">
+        <div>
+          <h2>Dashboard Penjualan — Tableau Public</h2>
+          <p>Visualisasi interaktif dengan filter, drill-down, dan tooltip. Klik elemen chart untuk cross-filter.</p>
+        </div>
+        <!-- Developer Note: Ganti URL href di bawah ini dengan link Tableau Public buatanmu -->
+        <a class="tableau-link"
+           id="tableau-link-btn"
+           href="https://public.tableau.com/views/Visualisasi_RakaHanastaSyahrafi/Dashboard2?:language=en-US&:sid=&:redirect=auth&:display_count=n&:origin=viz_share_link"
+           target="_blank" rel="noopener">
+          Buka di Tableau Public ↗
+        </a>
+      </div>
+      <div class="tableau-iframe-wrap">
+        <!-- Developer Note: Ganti URL src/data-src di bawah ini dengan link Tableau Public buatanmu -->
+        <iframe
+          id="tableau-iframe"
+          src=""
+          data-src="https://public.tableau.com/views/Visualisasi_RakaHanastaSyahrafi/Dashboard2?:embed=yes&:display_count=no&:toolbar=yes&:showVizHome=no"
+          allowfullscreen
+          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox">
+        </iframe>
+      </div>
+      <p class="tableau-note">
+        Dashboard dibuat dengan Tableau Public &nbsp;·&nbsp; Dataset: AdventureWorks Sales &nbsp;·&nbsp;
+        Gunakan filter di atas untuk eksplorasi interaktif
+      </p>
+    </div>
+  </div>
+
+  <!-- PANEL AI DASHBOARD -->
+  <div id="panel-ai">
+    <div class="dashboard-container">
+      
+      <!-- LEFT COLUMN: Visual Dashboard -->
+      <main class="visuals-pane">
+        
+        <!-- Summary Cards Section -->
+        <div class="pane-section">
+          <div class="summary-cards" id="summary-cards"></div>
+        </div>
+
+        <!-- D3 Charts Section -->
+        <div class="pane-section">
+          <div class="conflict-charts-grid">
+            
+            <!-- Main Chart: Profit Margin by Sub-Category with Anomaly Highlights -->
+            <div class="chart-card chart-card-wide">
+              <div class="chart-card-title-wrap">
+                <div class="chart-card-title">Profit Margin per Sub-Kategori</div>
+                <div class="chart-legend">
+                  <span class="legend-dot normal"></span> Normal
+                  <span class="legend-dot anomaly"></span> Anomali
+                </div>
+              </div>
+              <div id="chart-subcat"></div>
+            </div>
+
+            <!-- Side Column Charts -->
+            <div class="chart-side-col">
+              <div class="chart-card">
+                <div class="chart-card-title">Sales per Kategori</div>
+                <div id="chart-category"></div>
+              </div>
+              <div class="chart-card">
+                <div class="chart-card-title">Profit per Territory</div>
+                <div id="chart-region"></div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Summary Table Section -->
+        <div class="pane-section">
+          <div class="chart-card">
+            <div class="chart-card-title" style="margin-bottom: 12px;">Ringkasan Performa per Kategori</div>
+            <div id="category-table"></div>
+          </div>
+        </div>
+
+      </main>
+
+      <!-- RIGHT COLUMN: AI Analyst Companion (SCR Framework) -->
+      <aside class="ai-narrative-pane">
+        <div class="ai-sticky-container">
+          
+          <!-- Companion Header -->
+          <div class="companion-header">
+            <div class="ch-left">
+              <span class="companion-icon-label">Analyst</span>
+              <span class="companion-title">AI Storyteller</span>
+            </div>
+            <span class="model-badge" id="model-badge">Memuat model...</span>
+          </div>
+
+          <!-- Narrative Title -->
+          <h1 id="narrative-title">Memuat analisis data...</h1>
+
+          <!-- SCR Story Feed -->
+          <div class="scr-story-card">
+
+            <!-- SETUP SEGMENT -->
+            <div class="scr-section setup-segment">
+              <div class="scr-kicker">
+                Setup: Konteks Bisnis
+              </div>
+              <p id="setup-text" class="zone-desc"></p>
+            </div>
+
+            <!-- CONFLICT SEGMENT -->
+            <div class="scr-section conflict-segment">
+              <div class="scr-kicker">
+                Conflict: Masalah & Anomali
+              </div>
+              <p id="conflict-text" class="zone-desc"></p>
+
+              <!-- Alert Panel (Anomalies list) -->
+              <div class="alert-panel" id="alert-panel">
+                <div class="alert-panel-header">
+                  <div class="aph-left">
+                    <span class="alert-title">Deteksi Anomali</span>
+                    <div class="badge-wrap">
+                      <span class="severity-badge severe" id="badge-severe">0 Kritis</span>
+                      <span class="severity-badge warning" id="badge-warning">0 Peringatan</span>
+                    </div>
+                  </div>
+                  <button id="btn-narrate" onclick="requestAlertNarration()">Narasi AI</button>
+                </div>
+                <div class="alert-tabs">
+                  <button class="alert-tab active" onclick="switchAlertTab('raw', this)">Data</button>
+                  <button class="alert-tab" onclick="switchAlertTab('ai', this)">Narasi AI</button>
+                </div>
+                <div id="alert-tab-raw" class="alert-tab-content"></div>
+                <div id="alert-tab-ai" class="alert-tab-content" style="display:none">
+                  <div id="ai-narration-output">
+                    <p class="placeholder-text">Klik "Narasi AI" untuk penjelasan dari LLM.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- RESOLUTION SEGMENT -->
+            <div class="scr-section resolution-segment">
+              <div class="scr-kicker">
+                Resolution: Rekomendasi Tindakan
+              </div>
+              <p id="resolution-text" class="zone-desc"></p>
+
+              <!-- AI Insight (Interaktif Q&A) -->
+              <div class="insight-card">
+                <div class="insight-header">
+                  <span class="ih-title">Diskusi Insight Data</span>
+                </div>
+                <div id="insight-output" class="insight-output">
+                  <p class="insight-placeholder">Memuat insight dari AI...</p>
+                </div>
+                <div class="insight-input-wrap">
+                  <textarea id="custom-question" placeholder="Tanya sesuatu tentang data ini..." rows="2"></textarea>
+                  <button id="btn-insight" onclick="requestInsight()">Minta Insight</button>
+                </div>
+                <div class="quick-questions">
+                  <span class="qq-label">Cepat:</span>
+                  <div class="qq-buttons">
+                    <button class="qbtn" onclick="quickAsk('Kategori mana yang harus diprioritaskan untuk meningkatkan profit?')">Prioritas profit?</button>
+                    <button class="qbtn" onclick="quickAsk('Territory mana yang perlu perhatian khusus?')">Territory kritis?</button>
+                    <button class="qbtn" onclick="quickAsk('Apa rekomendasi konkret untuk 3 bulan ke depan?')">Rekomendasi?</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div> <!-- /scr-story-card -->
+
+        </div>
+      </aside>
+
+    </div>
+  </div>
+
+  <footer class="dash-footer">
+    <span>Dataset: AdventureWorks Sales &nbsp;·&nbsp; Powered by D3.js + Ollama Local</span>
+    <span id="footer-note" style="font-size:11px;color:#64748b;">Model: <span id="footer-model">-</span></span>
+  </footer>
+
+  <!-- Scripts: config → aiInsight → anomalyDetector → storyEngine → app -->
+  <script src="config.js"></script>
+  <script src="aiInsight.js"></script>
+  <script src="anomalyDetector.js"></script>
+  <script src="storyEngine.js"></script>
+  <script src="app.js"></script>
+
+  <script>
+  // Render table on event 'capstone-data-ready'
+  window.addEventListener('capstone-data-ready', function(e) {
+    const stats = e.detail;
+    const el = document.getElementById('category-table');
+    if (!el || !stats) return;
+    el.innerHTML = `
+      <table class="premium-table">
+        <thead>
+          <tr>
+            <th>Kategori</th>
+            <th class="txt-right">Sales</th>
+            <th class="txt-right">Profit</th>
+            <th class="txt-right">Margin</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${stats.categories.map(c => `
+            <tr>
+              <td class="font-semibold">${c.category}</td>
+              <td class="txt-right text-blue">${formatCurrency(c.sales)}</td>
+              <td class="txt-right font-semibold" style="color: ${c.profit >= 0 ? '#10b981' : '#ef4444'};">
+                ${formatCurrency(c.profit)}
+              </td>
+              <td class="txt-right font-bold" style="color: ${+c.margin >= 15 ? '#10b981' : +c.margin >= 5 ? '#f59e0b' : '#ef4444'};">
+                ${c.margin}%
+              </td>
+            </tr>`).join('')}
+        </tbody>
+      </table>`;
+
+    // Update footer model badge
+    const fm = document.getElementById('footer-model');
+    if (fm) fm.textContent = CONFIG.AI_PROVIDER === 'ollama' ? CONFIG.OLLAMA_MODEL : CONFIG.GROQ_MODEL;
+  });
+
+  // Tab switching logic
+  function switchTab(tab) {
+    document.getElementById('tab-ai').classList.toggle('active', tab === 'ai');
+    document.getElementById('tab-tableau').classList.toggle('active', tab === 'tableau');
+
+    document.getElementById('panel-ai').style.display      = tab === 'ai'      ? 'block' : 'none';
+    document.getElementById('panel-tableau').style.display = tab === 'tableau' ? 'block' : 'none';
+
+    // Lazy load iframe Tableau
+    if (tab === 'tableau') {
+      const iframe = document.getElementById('tableau-iframe');
+      if (!iframe.src || iframe.src === window.location.href) {
+        iframe.src = iframe.getAttribute('data-src');
+      }
+    }
+  }
+  </script>
+</body>
+</html>
