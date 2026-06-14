@@ -4,8 +4,8 @@
 const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
 const CONFIG = {
-  // Pilihan: 'ollama' atau 'groq'
-  AI_PROVIDER: 'ollama',
+  // Otomatis pakai 'ollama' jika di localhost, dan pakai 'groq' jika dideploy di Vercel/production
+  AI_PROVIDER: isLocalhost ? 'ollama' : 'groq',
 
   // Ollama settings
   // Jika lokal di port 8000 (PHP server), gunakan PHP proxy.
